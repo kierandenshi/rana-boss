@@ -1,0 +1,124 @@
+* 4.5
+** [Samples] Sample app that shows how to create a thick line using render targets.
+   Location of sample: =./samples/07_advanced_rendering/02_render_targets_thick_lines=
+** [Samples] Sample app that shows a large number of AABB collisions with gravity and physics.
+   Location of sample: =./samples/09_performance/09_collision_limits_aabb=
+   Demo video: https://youtu.be/HQTfqaIxSOA
+** [Samples] Sample app that shows advanced scene transitions (with global fade-in and fade-out)
+   Location of sample: =./samples/08_tweening_lerping_easing_functions/05_scene_transitions=
+** [Support] Added docs for ~args.gtk~ functions.
+** [Support] Added docs for ~args.geometry~ functions.
+** [Support] Added ~Numeric#lerp(to, step)~ and ~Numeric#remap(r1_begin, r1_end, r2_begin, r2_end)~.
+** [Support] Added Easing definitions ~smooth_start_(quad|cube|quart|quint)~ and ~smooth_stop_(quad|cube|quart|quint)~
+   Example:
+
+   #+begin_src
+    def tick args
+      args.state.box ||= {
+        x: 0,
+        y: 0,
+        w: 40,
+        h: 40
+      }
+
+      final_x = 1240
+      final_y = 680
+
+      # if space key is pressed, start animation
+      if args.inputs.keyboard.key_down.space
+        args.state.animation_start_at = args.state.tick_count
+      end
+
+      progress_x = 0
+      progress_y = 0
+
+      if args.state.animation_start_at
+        perc = args.easing.ease args.state.animation_start_at,     # start tick
+                                args.state.tick_count,             # current tick
+                                60,                                # duration
+                                :smooth_stop_quint                 # easing definition
+
+        progress_x = final_x * perc
+        progress_y = final_y * perc
+      end
+
+      args.outputs.solids << {
+        x: progress_x,
+        y: progress_y,
+        w: 40,
+        h: 40
+      }
+    end
+   #+end_src
+* 4.4
+** [Bugfix] Triangle rendering of solids respects r,g,b values.
+* 4.3
+** [Bugfix] Simpler encoding of a game's web-build working directory.
+* 4.2
+** [Bugfix] Update to web-based builds to remove offset within the Itch.io iFrame. This is definitely maybe fixed this time.
+** [Bugfix] Ensure that a game's web-build working directory is unique from game to game.
+* 4.1
+** [Bugfix] Update to web-based builds to remove offset within the Itch.io iFrame.
+* 4.0
+** [BREAKING] This release contains two very minor breaking changes (don't panic).
+   1. ~args.inputs.mouse.point~ no longer returns a ~Tuple/Array~ and
+      instead returns a ~Hash~ with ~x~ and ~y~ keys.
+
+      NOTE: You will ONLY see an issue with this change if you were
+      destructing the ~Tuple~.
+
+      Lines like the following:
+
+      #+begin_src ruby
+        # destructure tuple no longer supported
+        x, y = args.inputs.mouse.point
+      #+end_src
+
+      Must be changed to:
+
+      #+begin_src ruby
+        # Hash is returned (which cannot be destructured)
+        point = args.inputs.mouse.point
+        x, y = point.x, point.y
+      #+end_src
+
+   2. ~args.inputs.directional_vector~ has a similar change and can no longer
+       be destructured.
+
+   That's it for the breaking changes!
+** [Pro] [iOS] C Extensions fixed so that they are accepted by TestFlight.
+   A sample app has been added that shows how to package C Extensions for iOS:
+   =/samples/12_c_extensions/05_ios_c_extensions/=
+** [Pro] [Android] Android SDK target is now version 33 (android-ndk-r25b).
+** [Bugfix] [Pro] ~all_screen_max_scale~ in combination with ~highdpi~ is respected for both
+   landscape and portrait games.
+** [Samples] Turn based RPG sample app has been added.
+   The sample app is located at: =./samples/99_genre_rpg_turn_based/turn_based_battle=.
+** [Performance] Performance improvements to ~Entities~.
+   Both ~args.state.new_entity~ and ~args.state.new_entity_strict~
+   have gotten some performance improvements. The perf boost to
+   ~new_entity_strict~ is significant.
+** [Performance] [Support] ~args.gtk.warn_array_primitives!~ added.
+   While array based primitives are simple to create, they come with a performance
+   penalty. If you find that you're having performance issues, you can use ~warn_array_primitives~
+   to find places in your code where array primitives are used/created
+   (so you can convert them to ~Hashes~):
+
+   #+begin_src ruby
+     def tick args
+       # add this line to the top of your tick method
+       args.gtk.warn_array_primitives!
+
+       # a log entry will be printed to the Console anywhere array primitives are being used
+
+       # example
+       args.outputs.labels << [100, 100, "Hello"]
+
+       # example
+       rect_1 = [10, 100, 50, 50]
+       rect_2 = [10, 100, 50, 50]
+       args.geometry.intersect_rect? rect_1, rect_2
+     end
+   #+end_src
+** [Support] Added out of bounds warning for sprite's ~(source|tile)_(x|y|w|h)~ properties.
+   You will be warned if a specified source/tile rect goes past the boundaries of a sprite.
